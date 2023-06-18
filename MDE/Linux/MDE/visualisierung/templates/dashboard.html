@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            max-width: 400px;
+            max-height: 400px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="chartType">Select Chart Type:</label>
+        <select id="chartType" onchange="changeChartType()">
+            <option value="pie">Pie Chart</option>
+            <option value="bar">Bar Chart</option>
+            <option value="line">Line Chart</option>
+            <option value="doughnut">Doughnut Chart</option>
+        </select>
+        <label for="timePeriod">Select Time Period:</label>
+        <select id="timePeriod" onchange="changeTimePeriod()">
+            <option value="year">Last Year</option>
+            <option value="month">Last Month</option>
+            <option value="week">Last Week</option>
+            <option value="day">Last Day</option>
+        </select>
+    </div>
+    <div class="container">
+        <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <script>
+        // Get the data from Flask variables
+        var labels = {{ labels|tojson }};
+        var sizes = {{ sizes|tojson }};
+        var colors = {{ colors|tojson }};
+
+        // Initial chart type
+        var selectedChartType = 'pie';
+
+        // Function to change the chart type based on the selected option
+        function changeChartType() {
+            var chartType = document.getElementById('chartType').value;
+            selectedChartType = chartType;
+            renderChart();
+        }
+
+        // Function to change the time period based on the selected option
+        function changeTimePeriod() {
+            var timePeriod = document.getElementById('timePeriod').value;
+            fetch('/data/' + timePeriod)
+                .then(response => response.json())
+                .then(data => {
+                    labels = data.labels;
+                    sizes = data.sizes;
+                    renderChart();
+                });
+        }
+
+        // Function to render the selected chart
+        function renderChart() {
+            var canvas = document.getElementById('chartCanvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentNode.offsetWidth; // Adjust canvas width to fit its container
+            canvas.height = 400; // Set a fixed height for the chart
+
+            // Clear previous chart
+            if (window.currentChart) {
+                window.currentChart.destroy();
+            }
+
+            // Create the selected chart
+            switch (selectedChartType) {
+                case 'pie':
+                    window.currentChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: sizes,
+                                backgroundColor: colors
+                            }]
+                        }
+                    });
+                    break;
+                case 'bar':
+                    window.currentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Data',
+                                data: sizes,
+                                backgroundColor: colors
+                            }]
+                        }
+                    });
+                    break;
+                case 'line':
+                    window.currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Data',
+                                data: sizes,
+                                borderColor: 'blue',
+                                fill: false
+                            }]
+                        }
+                    });
+                    break;
+                case 'doughnut':
+                    window.currentChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: sizes,
+                                backgroundColor: colors
+                            }]
+                        }
+                    });
+                    break;
+            }
+        }
+
+        // Initial render of the chart
+        renderChart();
+    </script>
+</body>
+</html>

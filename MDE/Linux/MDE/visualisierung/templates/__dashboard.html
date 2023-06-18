@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            max-width: 400px;
+            max-height: 400px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="pieChart"></canvas>
+        <canvas id="barChart"></canvas>
+        <canvas id="lineChart"></canvas>
+        <canvas id="doughnutChart"></canvas>
+    </div>
+
+    <script>
+        // Get the data from Flask variables
+        var labels = {{ labels|tojson }};
+        var sizes = {{ sizes|tojson }};
+        var colors = {{ colors|tojson }};
+
+        // Create the pie chart
+        var pieCtx = document.getElementById('pieChart').getContext('2d');
+        var pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: sizes,
+                    backgroundColor: colors
+                }]
+            }
+        });
+
+        // Create the bar chart
+        var barCtx = document.getElementById('barChart').getContext('2d');
+        var barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Data',
+                    data: sizes,
+                    backgroundColor: colors
+                }]
+            }
+        });
+
+        // Create the line chart
+        var lineCtx = document.getElementById('lineChart').getContext('2d');
+        var lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Data',
+                    data: sizes,
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            }
+        });
+
+        // Create the doughnut chart
+        var doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+        var doughnutChart = new Chart(doughnutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: sizes,
+                    backgroundColor: colors
+                }]
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+import sqlite3
+from datetime import datetime
+from global_settings import GlobalSettings
+
+pgm_path= 'C:/Users/aa20277/Desktop/MA_Code/bde/Avatare/'
+def create_database():
+    # Connect to the database
+    conn = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+
+    # Create a cursor
+    c = conn.cursor()
+
+    # Create the Avatars table
+    c.execute('''CREATE TABLE IF NOT EXISTS Avatars (
+                    ID INTEGER NOT NULL,
+                    Name TEXT NOT NULL,
+                    img_path TEXT NOT NULL,
+                    PRIMARY KEY(ID AUTOINCREMENT)
+                )''')
+
+    # Create the MenschStammdaten table
+    c.execute('''CREATE TABLE IF NOT EXISTS MenschStammdaten (
+                    RFID INTEGER NOT NULL,
+                    Avatar_id INTEGER NOT NULL,
+                    VorName TEXT,
+                    NachName TEXT,
+                    Rolle TEXT,
+                    TelefonNr1 TEXT,
+                    TelefonNr2 TEXT,
+                    EmailArbeit TEXT,
+                    Is_Admin TEXT NOT NULL,
+                    PRIMARY KEY(RFID)
+                )''')
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+
+def insert_data(RFID, Avatar_id, VorName, NachName, Rolle, TelefonNr1, TelefonNr2, EmailArbeit, Is_Admin):
+    # Connect to the database
+    conn = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+
+    # Create a cursor
+    c = conn.cursor()
+
+    # Insert the data
+    c.execute('''INSERT INTO MenschStammdaten ( RFID, Avatar_id, VorName, NachName, Rolle, TelefonNr1, TelefonNr2, EmailArbeit, Is_Admin)
+                VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (RFID, Avatar_id, VorName, NachName, Rolle, TelefonNr1, TelefonNr2, EmailArbeit, Is_Admin))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+# example # insert_data(1, '123456', 1, 'John', 'Doe', 'Manager', '555-555-5555', '555-555-5556', 'john.doe@example.com', 'Yes')
+
+
+def delete_user(RFID):
+    # Connect to the database
+    conn = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+
+    # Create a cursor
+    c = conn.cursor()
+
+    # Delete the user
+    c.execute('''DELETE FROM MenschStammdaten WHERE RFID = ?''', (RFID,))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+# examole # delete_user('123456')
+
+
+def rfid_exists(rfid):
+    # Connect to the database
+    con = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+    cur = con.cursor()
+
+    # Query the 'MenschStammdaten' table for the provided RFID
+    cur.execute("SELECT 1 FROM MenschStammdaten WHERE RFID = ?", (rfid,))
+
+    # Fetch the result
+    result = cur.fetchone()
+
+    # Close the cursor and connection
+    cur.close()
+    con.close()
+
+    # If the result is not None, it means the RFID exists in the table
+    if result:
+        return True
+    else:
+        return False
+
+def get_unused_avatar_names_and_ids():
+    # Connect to the database
+    conn = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+    # Create a cursor
+    c = conn.cursor()
+    # Select all avatar names and IDs
+    c.execute('''SELECT  Avatars.ID, Avatars.Name
+                FROM Avatars
+                LEFT JOIN MenschStammdaten ON Avatars.ID = MenschStammdaten.Avatar_id
+                WHERE MenschStammdaten.Avatar_id IS NULL''')
+    # Fetch all the results
+    tuples = c.fetchall()
+    # Close the connection
+    conn.close()
+    # Convert the tuples to lists
+    results = [list(t) for t in tuples]
+    # Return the results
+    print ('results', results)
+    return results
+
+
+def get_name(rfid, option):
+    # Verbindung zur Datenbank herstellen
+    conn = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+    # Cursor erstellen
+    cursor = conn.cursor()
+
+    # Abfrage für Avatar-ID ausführen
+    cursor.execute("SELECT Avatar_id FROM MenschStammdaten WHERE RFID=?", (rfid,))
+    # Avatar-ID aus Ergebnis abrufen
+    avatar_id = cursor.fetchone()[0]
+
+    # Abfrage für Name, Vorname und Nachname ausführen
+    cursor.execute(
+        "SELECT Name, VorName, NachName FROM Avatars JOIN MenschStammdaten ON Avatars.ID = MenschStammdaten.Avatar_id WHERE MenschStammdaten.RFID=?",
+        (rfid,))
+    # Name, Vorname und Nachname aus Ergebnis abrufen
+    name, vorname, nachname = cursor.fetchone()
+
+    # Überprüfen, welche Option gewählt wurde
+    if option == 1:
+        # Name zurückgeben
+        return name
+    elif option == 2:
+        # Überprüfen, ob Vorname und/oder Nachname vorhanden sind
+        if vorname or nachname:
+            # Vorname und Nachname zurückgeben
+            return f"{vorname} {nachname}"
+        else:
+            # Name zurückgeben
+            return name
+    else:
+        # Name zurückgeben
+        return name
+
+def get_leistungsart_name(ID):
+    # Connect to the database
+    conn = sqlite3.connect("Stamm_daten_Mensch")
+    c = conn.cursor()
+
+    # Execute a SELECT statement to retrieve the Leistungart
+    c.execute("SELECT Leistungart FROM LeistungsartenMensch WHERE ID = ?", (ID,))
+
+    # Fetch the result
+    leistungsart = c.fetchone()[0]
+
+    # Close the connection
+    conn.close()
+
+    return leistungsart
+
+
+
+def create_activity_table():
+    # Get the current month and year
+    now = datetime.now()
+    month = now.strftime("%B")
+    year = now.year
+
+    # Create the table name
+    table_name = f"{month}_{year}"
+
+    # Connect to the database (or create it if it doesn't exist)
+    conn = sqlite3.connect("bde_activities.db")
+    c = conn.cursor()
+
+    c.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+    if c.fetchone() is None:
+        # Create the table with the specified columns and primary key
+        c.execute(f"CREATE TABLE {table_name} (ZeitPunkt TIMESTAMP PRIMARY KEY, ArbeitplatzId INTEGER, MenschID INTEGER,LeistungsartID INTEGER , Dauer INTEGER)")
+        conn.commit()
+    # Close the connection
+    conn.close()
+
+
+def insert_data_to_activities(ZeitPunkt, ArbeitplatzId, MenschID,LeistungsartID, Dauer):
+
+    # Get the current month and year
+    now = datetime.now()
+    month = now.strftime("%B")
+    year = now.year
+
+    # Create the table name
+    table_name = f"{month}_{year}"
+
+    # Connect to the database
+    conn = sqlite3.connect("bde_activities.db")
+    c = conn.cursor()
+
+    # Insert the data into the table
+    c.execute(f"INSERT INTO {table_name} (ZeitPunkt, ArbeitplatzId, MenschID,LeistungsartID, Dauer) VALUES (?,?,?,?,?)", (ZeitPunkt, ArbeitplatzId, MenschID,LeistungsartID, Dauer))
+
+    # Save changes and close the connection
+    conn.commit()
+    conn.close()
+
+
+
+
+def get_img_path(rfid):
+    try:
+        # Connect to the database
+        con = sqlite3.connect(GlobalSettings.Stamm_daten_Mensch_db_path)
+        cur = con.cursor()
+
+        # Query the 'Avatars' table for the 'img_path' where the 'RFID' in the 'MenschStammdaten' table matches the provided RFID
+        cur.execute(
+            "SELECT Avatars.img_path FROM Avatars JOIN MenschStammdaten ON Avatars.ID = MenschStammdaten.Avatar_id WHERE MenschStammdaten.RFID = ?",
+            (rfid,))
+
+        # Fetch the result
+        result = cur.fetchone()
+
+        # Close the cursor and connection
+        cur.close()
+        con.close()
+
+        # Return the result
+        return result[0]
+    except:
+        return GlobalSettings.default_img_path
+
+
+
+import tkinter.messagebox as messagebox
+def is_RFID_in_MenschStammdaten(db_name, RFID):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM MenschStammdaten WHERE RFID=?", (RFID,))
+    result = cursor.fetchall()
+    conn.close()
+    if len(result) > 0:
+        message ="Die RFID-Karte ist im System vorhanden mit den folgenden Daten:\n"
+        message += "RFID: " + str(result[0][0]) + "\n"
+        message += "Avatar ID: " + str(result[0][1]) + "\n"
+        message += "Vorname: " + result[0][2] + "\n"
+        message += "Nachname: " + result[0][3] + "\n"
+        message += "Rolle: " + result[0][4] + "\n"
+        message += "TelefonNr1: " + result[0][5] + "\n"
+        message += "TelefonNr2: " + result[0][6] + "\n"
+        message += "EmailArbeit: " + result[0][7] + "\n"
+        message += "Is_Admin: " + result[0][8]
+        messagebox.showinfo("RFID Info", message)
+        return True
+
+    else:
+     messagebox.showinfo("Ok ", "Done!")
+    return False

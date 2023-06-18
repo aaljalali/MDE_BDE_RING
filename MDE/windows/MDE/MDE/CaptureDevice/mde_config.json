@@ -1,0 +1,13 @@
+{
+    "image_folder": "/home/pi/Images",
+    "machine_id": 1,
+    "customer_id": 1,
+    "image_width" : 1920,
+    "image_height" : 1080,
+    "capture_interval" : 2,
+    "image_format" : "tiff",
+    "should_save_img": 1,
+    "machine_off_sleep_n_sec": 30,
+    "img_filters": 0
+
+}

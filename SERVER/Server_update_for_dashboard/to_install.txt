@@ -1,0 +1,30 @@
+in Raspberry pi Termianl
+pip3 install fastapi  
+pip3 install uvicorn
+pip3 install varname
+sudo apt-get install sqlite3
+#######
+from datetime import datetime
+import os
+from typing import Optional
+from fastapi import FastAPI
+from pydantic import BaseModel
+from json_operations import *
+from folder_operations import *
+import json
+import io
+import json
+import os
+from pydantic import BaseModel
+from typing import Optional
+from varname import nameof
+import inspect
+
+######
+
+uvicorn settings:
+(https://www.uvicorn.org/settings/)
+how to run from terminal :
+1- accese the python program(API_Server) direction
+2- uvicorn API_Server:app --reload 
+3- (run in local network)uvicorn API_Server:app --host 0.0.0.0
